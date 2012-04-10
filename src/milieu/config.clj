@@ -78,7 +78,7 @@
                      (str/replace <> #"^-+" "")
                      (str/split <> #"\.")
                      (map keyword <>)
-                     (vec <>)))]
+                     vec))]
     {:cmdargs
      (reduce
       (fn [m [k v]]
