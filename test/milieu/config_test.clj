@@ -50,9 +50,18 @@
   (config/value :fou :car)   => 9))
 
 (fact
- "warning when not found"
+ "warning when not found and not in quiet mode"
+ (against-background (config/getenv config/quiet-sysvar-name) => nil)
  (config/value :non-existent) => "performed warning"
- (provided (config/warn irrelevant irrelevant) => "performed warning"))
+ (provided
+  (config/warn* irrelevant irrelevant) => "performed warning"))
+
+(fact
+ "no warning when not found but in quiet mode"
+ (against-background (config/getenv config/quiet-sysvar-name) => true)
+ (config/value :non-existent) => anything
+ (provided
+  (config/warn* irrelevant irrelevant) => true :times 0))
 
 (facts
  "command-line overrides"

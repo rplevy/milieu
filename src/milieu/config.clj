@@ -14,19 +14,28 @@
 
 (def ^:dynamic *config-file-name* "configure.yml")
 
-(defn warn [message & format-args]
-  (when-not (System/getenv quiet-sysvar-name)
-    (do (log/warn (apply format message format-args))
-        nil)))
+(defn ^{:todo "make private once the midje pre-req var bug is fixed"}
+  getenv [sysvar]
+  (System/getenv sysvar))
+
+(defn ^{:todo "make private once the midje pre-req var bug is fixed"}
+  warn* [message format-args]
+  (do (log/warn (apply format message format-args))
+      nil))
+
+(defn ^{:todo "make private once the midje pre-req var bug is fixed"}
+  warn [message & format-args]
+  (when-not (getenv quiet-sysvar-name) (warn* message format-args)))
 
 ;; Determining the environment: if *env* is bound (as when using with-env),
 ;; use that.  If not, use the default, set at compile time.  If the env var
 ;; MILIEU_ENV exists, use that, otherwise default to the safest: dev.
 
 (def ^:dynamic *env*
-  (or (keyword (System/getenv env-sysvar-name))
-      (do (warn "system variable %s was not set. Default value will be \"dev\"."
-                env-sysvar-name)
+  (or (keyword (getenv env-sysvar-name))
+      (do (warn
+           "system variable %s was not set. Default value will be \"dev\"."
+           env-sysvar-name)
           :dev)))
 
 (defmacro with-env
