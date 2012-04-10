@@ -13,7 +13,7 @@
 
 (def ^:dynamic *config-file-name* "configure.yml")
 
-(defn ^:private warn [message & format-args]
+(defn warn [message & format-args]
   (when-not (System/getenv quiet-sysvar-name)
     (do (log/warn (apply format message format-args))
         nil)))
@@ -46,7 +46,8 @@
         override (value' :cmdargs)]
     (cond (or override (false? override)) override
           (or env-value (false? env-value)) env-value
-          :none-provided (warn "requested config setting %s not found!" ks))))
+          :none-provided (warn "requested config setting %s not found!"
+                               (cons k ks)))))
 
 (defn ^:private keywordize
   "helper function for load-config"

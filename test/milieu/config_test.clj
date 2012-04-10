@@ -49,13 +49,10 @@
   (str (config/value :size)) => "medium"
   (config/value :fou :car)   => 9))
 
-;; hmmm there has to be some way to capture the warning message...
-#_(fact
-   "warning when not found"
-   (let [s (new java.io.StringWriter)]
-     (binding [*err* s]
-       (config/value :non-existent)
-       (str s))) => #"not found")
+(fact
+ "warning when not found"
+ (config/value :non-existent) => "performed warning"
+ (provided (config/warn irrelevant irrelevant) => "performed warning"))
 
 (facts
  "command-line overrides"
