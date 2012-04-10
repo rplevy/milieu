@@ -23,8 +23,7 @@
   (do (log/warn (apply format message format-args))
       nil))
 
-(defn ^{:todo "make private once the midje pre-req var bug is fixed"}
-  warn [message & format-args]
+(defn ^:private warn [message & format-args]
   (when-not (getenv quiet-sysvar-name) (warn* message format-args)))
 
 ;; Determining the environment: if *env* is bound (as when using with-env),
