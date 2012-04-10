@@ -1,6 +1,6 @@
 # milieu
 
-Milieu: the environmentally friendly configuration tool.
+The environmentally friendly configuration tool.
 
 ## Features:
 
@@ -16,7 +16,7 @@ application.
 
 Helpful info / warnings that can be turned off with MILIEU_QUIET system variable:
 
-* WARNING: system variable MILIEU_ENV was not set. Default value will be \"dev\"
+* WARNING: system variable MILIEU_ENV was not set. Default value will be "dev"
 
 * WARNING: requested config setting [:fou :barre] not found!
 
@@ -24,7 +24,7 @@ Helpful info / warnings that can be turned off with MILIEU_QUIET system variable
 
 ### Installation
 
-http://clojars.org/rplevy-draker/milieu
+http://clojars.org/milieu
 
 ### Getting Started
 
