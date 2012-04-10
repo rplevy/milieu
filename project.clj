@@ -1,4 +1,4 @@
-(defproject milieu "0.0.1"
+(defproject milieu "0.1.0"
   :description "The environmentally friendly configuration tool."
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
