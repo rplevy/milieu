@@ -3,7 +3,8 @@
             [clojure.tools.logging :as log]
             [clojure.walk :as walk]
             [clj-yaml.core :as yaml]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:use [swiss-arrows.core :only [-<>]]))
 
 (defonce ^:private configuration (atom {}))
 
@@ -73,10 +74,11 @@
 (defn ^:private commandline-overrides* [args]
   (assert (even? (count args)))
   (let [cmdarg->cfgkey
-        (fn [s] (->>
-                 (-> s (str/replace #"^-+" "") (str/split #"\."))
-                 (map keyword)
-                 vec))]
+        (fn [s] (-<> s
+                     (str/replace <> #"^-+" "")
+                     (str/split <> #"\.")
+                     (map keyword <>)
+                     (vec <>)))]
     {:cmdargs
      (reduce
       (fn [m [k v]]
