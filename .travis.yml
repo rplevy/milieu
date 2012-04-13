@@ -1,5 +1,5 @@
 language: clojure
-install: sh ./etc/midje-travis
+script: sh ./etc/midje-travis
 branches:
   only:
     - master
