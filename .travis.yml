@@ -1,5 +1,5 @@
 language: clojure
-install: lein midje
+install: sh ./etc/midje-travis
 branches:
   only:
     - master
