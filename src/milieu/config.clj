@@ -8,11 +8,13 @@
 
 (defonce ^:private configuration (atom {}))
 
-(def env-sysvar-name "MILIEU_ENV")
+(defonce ^:private overrides (atom {}))
 
-(def quiet-sysvar-name "MILIEU_QUIET")
+(def ^:private env-sysvar-name "MILIEU_ENV")
 
-(def ^:dynamic *config-file-name* "configure.yml")
+(def ^:private quiet-sysvar-name "MILIEU_QUIET")
+
+(def ^:private default-config-name "configure.yml")
 
 (defn ^{:todo "make private once the midje pre-req var bug is fixed"}
   getenv [sysvar]
@@ -25,6 +27,11 @@
 
 (defn ^:private warn [message & format-args]
   (when-not (getenv quiet-sysvar-name) (warn* message format-args)))
+
+(defn ^:private info [message & format-args]
+  (when-not (getenv quiet-sysvar-name)
+    (do (log/info (apply format message format-args))
+        nil)))
 
 ;; Determining the environment: if *env* is bound (as when using with-env),
 ;; use that.  If not, use the default, set at compile time.  If the env var
@@ -50,11 +57,10 @@
    If commandline-overrides are in place (including false-valued ones),
    these take precedent over the present environment's fields."
   [k & ks]
-  (let [value' (fn [e] (get-in @configuration (concat [e k] ks)))
-        env-value (value' *env*)
-        override (value' :cmdargs)]
-    (cond (or override (false? override)) override
-          (or env-value (false? env-value)) env-value
+  (let [env-value      (get-in @configuration (concat [*env*    k] ks))
+        override-value (get-in @overrides     (concat [:cmdargs k] ks))]
+    (cond (or override-value (false? override-value)) override-value
+          (or env-value (false? env-value))           env-value
           :none-provided (warn "requested config setting %s not found!"
                                (cons k ks)))))
 
@@ -70,8 +76,9 @@
 
 (defn load-config
   "load the yaml config file"
-  []
-  (when-let [config-file (io/resource *config-file-name*)]
+  [config-name]
+  (let [config-file (io/resource config-name)]
+    (if-not config-file (throw (Exception. "config file not found.")))
     (swap! configuration
            #(merge % 
                    (-> config-file
@@ -94,9 +101,11 @@
       {} (partition 2 args))}))
 
 (defn commandline-overrides!
-  "destructively override values, regardless of environment.
+  "override values, regardless of environment.
    $ myprogram prod --fou.barre Fred --db.host 127.0.0.1"
   [args]
-  (swap! configuration (fn [m] (merge m (commandline-overrides* args)))))
+  (swap! overrides (fn [m] (merge m (commandline-overrides* args)))))
 
-(load-config)
+(if-not (io/resource default-config-name)
+  (info "to enable auto-load, name your config-file %s." default-config-name)
+  (load-config default-config-name))
