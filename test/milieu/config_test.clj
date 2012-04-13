@@ -21,6 +21,8 @@
    @@#'config/configuration)
  => {}
 
+ (config/load-config "non-existent-file.yml") => (throws Exception)
+ 
  ;; this also sets up state for the following tests
  
  (do (config/load-config "configure.example.yml")
