@@ -2,9 +2,7 @@
 
 The environmentally friendly configuration tool.
 
-## Build status:
-
-[![Build Status](https://secure.travis-ci.org/drakerlabs/milieu.png?branch=master)](http://travis-ci.org/drakerlabs/milieu)
+**build status:** [![Build Status](https://secure.travis-ci.org/drakerlabs/milieu.png?branch=master)](http://travis-ci.org/drakerlabs/milieu)
 
 ## Features:
 
