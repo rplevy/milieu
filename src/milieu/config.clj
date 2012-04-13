@@ -35,7 +35,7 @@
 
 ;; Determining the environment: if *env* is bound (as when using with-env),
 ;; use that.  If not, use the default, set at compile time.  If the env var
-;; MILIEU_ENV exists, use that, otherwise default to the safest: dev.
+;; MILIEU_ENV exists, use that, otherwise default to dev.
 
 (def ^:dynamic *env*
   (or (keyword (getenv env-sysvar-name))
