@@ -21,13 +21,10 @@
    @@#'config/configuration)
  => {}
 
- ;; somewhat artificial example, in order to avoid putting a real configure.yml
- ;; on the library's class path. This sets up state for the following tests too.
+ ;; this also sets up state for the following tests
  
- (do
-   (binding [milieu.config/*config-file-name* "configure.example.yml"]
-     (config/load-config)
-     (:dev @@#'config/configuration)))
+ (do (config/load-config "configure.example.yml")
+     (:dev @@#'config/configuration))
  => map?)
 
 
@@ -51,13 +48,13 @@
 
 (fact
  "warning when not found and not in quiet mode"
- (against-background (config/getenv config/quiet-sysvar-name) => nil)
+ (against-background (config/getenv @#'config/quiet-sysvar-name) => nil)
  (config/value :non-existent) => "performed warning"
  (provided (config/warn* irrelevant irrelevant) => "performed warning"))
 
 (fact
  "no warning when not found but in quiet mode"
- (against-background (config/getenv config/quiet-sysvar-name) => true)
+ (against-background (config/getenv @#'config/quiet-sysvar-name) => true)
  (config/value :non-existent) => anything
  (provided (config/warn* irrelevant irrelevant) => true :times 0))
 
