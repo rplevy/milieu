@@ -1,0 +1,5 @@
+language: clojure
+install: lein midje
+branches:
+  only:
+    - master
