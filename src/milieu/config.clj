@@ -3,8 +3,8 @@
             [clojure.tools.logging :as log]
             [clojure.walk :as walk]
             [clj-yaml.core :as yaml]
-            [clojure.string :as str])
-  (:use [swiss-arrows.core :only [-<>]]))
+            [clojure.string :as str]
+            [swiss-arrows.core :refer [-<>]]))
 
 (defonce ^:private configuration (atom {}))
 
@@ -95,10 +95,9 @@
                      (map keyword <>)
                      vec))]
     {:cmdargs
-     (reduce
-      (fn [m [k v]]
-        (update-in m (cmdarg->cfgkey k) (constantly (read-string v))))
-      {} (partition 2 args))}))
+     (reduce-kv
+      #(assoc-in %1 (cmdarg->cfgkey %2) (read-string %3))
+      {} (apply hash-map args))}))
 
 (defn commandline-overrides!
   "override values, regardless of environment.
