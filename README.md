@@ -13,7 +13,7 @@ the popular YAML file format.
 
 * Access config values:
 
-  Required config values (will warn if undef when not suppressed.)
+  Specifying config values as required (will warn if undef when not suppressed.)
   ```clojure
   (config/value :my :config :value)
   ```
@@ -25,7 +25,7 @@ the popular YAML file format.
         value:
   ```
 
-  Optional config values
+  Specifying config values as optional:
   ```clojure
   (config/value| :my :config :value) ; same as config/value except doesn’t warn if it’s not found
   (config/value| [:my :config :value] "alternate value") ; provide alternate value
