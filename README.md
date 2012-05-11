@@ -13,7 +13,7 @@ the popular YAML file format.
 
 * Access config values:
 
-  Specifying config values (will warn if undef when not suppressed.)
+  Specifying config values:
   ```clojure
   (config/value :my :config :value)
   ```
