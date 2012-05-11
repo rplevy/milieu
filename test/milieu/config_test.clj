@@ -48,6 +48,23 @@
   (str (config/value :size)) => "medium"
   (config/value :fou :car)   => 9))
 
+(against-background
+ [(around :facts (config/with-env :prod ?form))]
+ (facts
+  (config/value| :fou)        => map?
+  (config/value| :fou :barre) => "7.7.7.7"
+  (config/value| [:fou :barre] "") => "7.7.7.7"
+  
+  (fact
+   "alternate value should be used when item is not defined"
+   (config/value| [:fou :berry] "9.9.9.9") => "9.9.9.9")
+  
+  (fact
+   "flow of control should shortcut and not evaluate the alternative"
+   (let [a (atom 0)]
+     (config/value| [:fou :barre] (do (reset! a 1))) => "7.7.7.7"
+     @a => 0))))
+
 (fact
  "warning when not found and not in quiet mode"
  (against-background (#'config/getenv @#'config/quiet-sysvar-name) => nil)
@@ -58,6 +75,12 @@
  "no warning when not found but in quiet mode"
  (against-background (#'config/getenv @#'config/quiet-sysvar-name) => true)
  (config/value :non-existent) => anything
+ (provided (#'config/warn* irrelevant irrelevant) => true :times 0))
+
+(fact
+ "no warning for optional regardless of not being in quiet mode"
+ (against-background (#'config/getenv @#'config/quiet-sysvar-name) => nil)
+ (config/value| :non-existent) => anything 
  (provided (#'config/warn* irrelevant irrelevant) => true :times 0))
 
 (facts

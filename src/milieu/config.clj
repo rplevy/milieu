@@ -48,6 +48,16 @@
   `(binding [*env* (or (keyword ~env) *env*)]
      ~@body))
 
+(defn value*
+  [[k & ks] & optional?]
+  (let [env-value      (get-in @configuration (concat [*env*    k] ks))
+        override-value (get-in @overrides     (concat [:cmdargs k] ks))]
+    (cond (or override-value (false? override-value)) override-value
+          (or env-value (false? env-value))           env-value
+          :none-provided (when-not optional?
+                           (warn "requested config setting %s not found!"
+                                 (cons k ks))))))
+
 (defn value
   "Access a config value.
    Example: (config/value :cassandra :ip)
@@ -55,12 +65,20 @@
    If commandline-overrides are in place (including false-valued ones),
    these take precedent over the present environment's fields."
   [k & ks]
-  (let [env-value      (get-in @configuration (concat [*env*    k] ks))
-        override-value (get-in @overrides     (concat [:cmdargs k] ks))]
-    (cond (or override-value (false? override-value)) override-value
-          (or env-value (false? env-value))           env-value
-          :none-provided (warn "requested config setting %s not found!"
-                               (cons k ks)))))
+  (value* (cons k ks)))
+
+(defmacro value|
+  "Same as value function, except:
+     * treats the value as optional
+     * accepts an alternate syntax for default/failover
+       e.g. (config/value| [:j :k] \"alternative\"
+     * is defined as a macro to support control flow shortcutting"
+  [ks & [alt & more]]
+  (if (vector? ks)
+    `(or (value* ~ks :optional)
+         ~alt)
+    (let [ks (take-while keyword? (flatten [ks alt more]))]
+      `(value* [~@ks] :optional))))
 
 (defn ^:private keywordize
   "helper function for load-config"
