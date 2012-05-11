@@ -16,12 +16,10 @@
 
 (def ^:private default-config-name "configure.yml")
 
-(defn ^{:todo "make private once the midje pre-req var bug is fixed"}
-  getenv [sysvar]
+(defn ^:private getenv [sysvar]
   (System/getenv sysvar))
 
-(defn ^{:todo "make private once the midje pre-req var bug is fixed"}
-  warn* [message format-args]
+(defn ^:private warn* [message format-args]
   (do (log/warn (apply format message format-args))
       nil))
 
