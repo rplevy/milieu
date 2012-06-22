@@ -51,6 +51,31 @@ application.
       ... )
   ```
 
+* In cases where the environment can be variable, code evaluation can by
+restricted in with-env or only-env, or more generally conditional using
+if-env and when-env.
+
+  If env is prod, the code in the body will not be exercised, an exception
+  will be thrown instead:
+  ```clojure
+  (defn -main [env & args]
+    (config/with-env [env :only [:test :dev]] ,,,))
+  ```
+
+  Alternatively (for example if you aren't in the context of a with-env)
+  ```clojure
+  (config/only-env [:test :dev] ,,,)
+  ```
+
+  These forms are general purpose conditionals, not asserting restrictions:
+  ```clojure
+  (if-env :test "hello" "goodbye")
+  ```
+
+  ```clojure
+  (when-env :dev ,,,)
+  ```
+
 Helpful info / warnings that can be turned off with MILIEU_QUIET system variable:
 
 * WARNING: system variable MILIEU_ENV was not set. Default value will be "dev"
