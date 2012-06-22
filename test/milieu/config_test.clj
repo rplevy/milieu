@@ -22,9 +22,9 @@
  => {}
 
  (config/load-config "non-existent-file.yml") => (throws Exception)
- 
+
  ;; this also sets up state for the following tests
- 
+
  (do (config/load-config "configure.example.yml")
      (:dev @@#'config/configuration))
  => map?)
@@ -54,16 +54,23 @@
   (config/value| :fou)        => map?
   (config/value| :fou :barre) => "7.7.7.7"
   (config/value| [:fou :barre] "") => "7.7.7.7"
-  
+
   (fact
    "alternate value should be used when item is not defined"
    (config/value| [:fou :berry] "9.9.9.9") => "9.9.9.9")
-  
+
   (fact
    "flow of control should shortcut and not evaluate the alternative"
    (let [a (atom 0)]
      (config/value| [:fou :barre] (do (reset! a 1))) => "7.7.7.7"
      @a => 0))))
+
+(facts
+ "environment conditionals"
+ (config/with-env :test (config/if-env :dev 1 2)) => 2
+ (config/with-env :test (config/if-env :test 1 2)) => 1
+ (config/with-env :dev (config/when-env :dev 1 2 3 4 5)) => 5
+ (config/with-env :dev (config/when-env :test 1 2 3 4 5)) => nil)
 
 (fact
  "warning when not found and not in quiet mode"
@@ -80,14 +87,14 @@
 (fact
  "no warning for optional regardless of not being in quiet mode"
  (against-background (#'config/getenv @#'config/quiet-sysvar-name) => nil)
- (config/value| :non-existent) => anything 
+ (config/value| :non-existent) => anything
  (provided (#'config/warn* irrelevant irrelevant) => true :times 0))
 
 (facts
  "command-line overrides"
  (#'config/commandline-overrides* ["--fou.barre" "1" "--skidoo" "(1 2 3)"])
  => {:cmdargs {:skidoo '(1 2 3), :fou {:barre 1}}}
- 
+
  (#'config/commandline-overrides* ["--fou" "1" "--skidoo" "(1 2 3)"])
  => {:cmdargs {:skidoo '(1 2 3), :fou 1}}
 
@@ -106,7 +113,7 @@
  (do (config/commandline-overrides! ["--fou.barre" "1"])
      (config/with-env :cmdargs (config/value :fou :barre)))
  => 1
- 
+
  ;; override means it should take precedence over the active environment
  (let [_ (swap! @#'config/configuration
                 #(update-in % [:prod :fou :my-barre] (constantly "127.0.0.1")))
