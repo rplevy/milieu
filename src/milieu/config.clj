@@ -48,6 +48,12 @@
   `(binding [*env* (or (keyword ~env) *env*)]
      ~@body))
 
+(defmacro if-env [env if-form else-form]
+  `(if (= *env* ~env) ~if-form ~else-form))
+
+(defmacro when-env [env & body]
+  `(when (= *env* ~env) ~@body))
+
 (defn value*
   [[k & ks] & optional?]
   (let [env-value      (get-in @configuration (concat [*env*    k] ks))
