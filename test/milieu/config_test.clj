@@ -2,17 +2,6 @@
   (:use midje.sweet)
   (require [milieu.config :as config]))
 
-(fact
- (config/with-env :test
-   (do-something!)
-   (do-another-thing!)) =expands-to=> (clojure.core/binding
-                                       [milieu.config/*env*
-                                        (clojure.core/or
-                                         (clojure.core/keyword :test)
-                                         milieu.config/*env*)]
-                                       (do-something!)
-                                       (do-another-thing!)))
-
 (facts
  ;; make sure we can load and parse a config file
 
@@ -22,13 +11,21 @@
  => {}
 
  (config/load-config "non-existent-file.yml") => (throws Exception)
- 
+
  ;; this also sets up state for the following tests
- 
+
  (do (config/load-config "configure.example.yml")
      (:dev @@#'config/configuration))
  => map?)
 
+(facts
+ "with-env observes specified restrictions"
+ (let [some-fun (fn [env]
+                  (config/with-env [env :only [:dev :test]]
+                    (config/value :fou :barre)))]
+   (some-fun :dev) => "127.0.0.1"
+   (some-fun :test) => "9.9.9.9"
+   (some-fun :prod) => (throws Exception)))
 
 (against-background
  [(around :facts (config/with-env :prod ?form))]
@@ -54,11 +51,11 @@
   (config/value| :fou)        => map?
   (config/value| :fou :barre) => "7.7.7.7"
   (config/value| [:fou :barre] "") => "7.7.7.7"
-  
+
   (fact
    "alternate value should be used when item is not defined"
    (config/value| [:fou :berry] "9.9.9.9") => "9.9.9.9")
-  
+
   (fact
    "flow of control should shortcut and not evaluate the alternative"
    (let [a (atom 0)]
@@ -80,14 +77,14 @@
 (fact
  "no warning for optional regardless of not being in quiet mode"
  (against-background (#'config/getenv @#'config/quiet-sysvar-name) => nil)
- (config/value| :non-existent) => anything 
+ (config/value| :non-existent) => anything
  (provided (#'config/warn* irrelevant irrelevant) => true :times 0))
 
 (facts
  "command-line overrides"
  (#'config/commandline-overrides* ["--fou.barre" "1" "--skidoo" "(1 2 3)"])
  => {:cmdargs {:skidoo '(1 2 3), :fou {:barre 1}}}
- 
+
  (#'config/commandline-overrides* ["--fou" "1" "--skidoo" "(1 2 3)"])
  => {:cmdargs {:skidoo '(1 2 3), :fou 1}}
 
@@ -106,7 +103,7 @@
  (do (config/commandline-overrides! ["--fou.barre" "1"])
      (config/with-env :cmdargs (config/value :fou :barre)))
  => 1
- 
+
  ;; override means it should take precedence over the active environment
  (let [_ (swap! @#'config/configuration
                 #(update-in % [:prod :fou :my-barre] (constantly "127.0.0.1")))
@@ -119,3 +116,4 @@
        changed-to-nil (config/with-env :prod (config/value :fou :my-barre))]
    [barre changed-barre changed-to-false changed-to-nil])
  => ["127.0.0.1" "1.2.3.4" false "127.0.0.1"])
+
