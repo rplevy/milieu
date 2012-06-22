@@ -43,10 +43,29 @@
           :dev)))
 
 (defmacro with-env
-  "bind the environment to a value for the calling context"
+  "bind the environment to a value for the calling context.
+
+   Env can optionally be a vector containing the env and options. Presently
+   the option :only is supported, which stops execution if the provided
+   env is not in the limited set."
   [env & body]
-  `(binding [*env* (or (keyword ~env) *env*)]
-     ~@body))
+  (let [[env {:keys [only] :as options}]
+        (if (vector? env)
+          [(first env) (apply hash-map (rest env))]
+          [env])]
+    `(if (and ~only (not ((set ~only) (keyword ~env))))
+       (throw (Exception. "Access to this environment is prohibited."))
+       (binding [*env* (or (keyword ~env) *env*)]
+         ~@body))))
+
+(defmacro only-env
+  "similar to :only option in with-env but allows for assertion of environment
+   restricted code more generally, including when the environement is set by
+   the system variable and not by with-env"
+  [env-vector & body]
+  `(if (not ((set ~env-vector) *env*))
+     (throw (Exception. "Access to this environment is prohibited."))
+     (do ~@body)))
 
 (defmacro if-env [env if-form else-form]
   `(if (= *env* ~env) ~if-form ~else-form))
@@ -102,7 +121,7 @@
   (let [config-file (io/resource config-name)]
     (if-not config-file (throw (Exception. "config file not found.")))
     (swap! configuration
-           #(merge % 
+           #(merge %
                    (-> config-file
                        slurp
                        yaml/parse-string
