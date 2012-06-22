@@ -6,5 +6,5 @@
                  [org.clojure/tools.logging "0.2.3"]
                  [clj-yaml "0.3.1"]
                  [swiss-arrows "0.3.0"]]
-  :profiles {:dev {:dependencies [[midje "1.4.0-RC1"]]}}
+  :profiles {:dev {:dependencies [[midje "1.4.0"]]}}
   :plugins [[lein-midje "2.0.0-SNAPSHOT"]])
