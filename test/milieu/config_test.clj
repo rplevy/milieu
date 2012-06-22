@@ -2,17 +2,6 @@
   (:use midje.sweet)
   (require [milieu.config :as config]))
 
-(fact
- (config/with-env :test
-   (do-something!)
-   (do-another-thing!)) =expands-to=> (clojure.core/binding
-                                       [milieu.config/*env*
-                                        (clojure.core/or
-                                         (clojure.core/keyword :test)
-                                         milieu.config/*env*)]
-                                       (do-something!)
-                                       (do-another-thing!)))
-
 (facts
  ;; make sure we can load and parse a config file
 
@@ -29,6 +18,24 @@
      (:dev @@#'config/configuration))
  => map?)
 
+(facts
+ "with-env observes specified restrictions"
+ (let [some-fun (fn [env]
+                  (config/with-env [env :only [:dev :test]]
+                    (config/value :fou :barre)))]
+   (some-fun :dev) => "127.0.0.1"
+   (some-fun :test) => "9.9.9.9"
+   (some-fun :prod) => (throws Exception)))
+
+(facts
+ "only-env observes specified restrictions"
+ (let [some-fun (fn []
+                  (config/only-env
+                   [:dev :test]
+                   (config/value :fou :barre)))]
+   (some-fun) => "127.0.0.1" ; milieu default is :dev
+   (config/with-env :test (some-fun)) => "9.9.9.9"
+   (config/with-env :prod (some-fun)) => (throws Exception)))
 
 (against-background
  [(around :facts (config/with-env :prod ?form))]
@@ -126,3 +133,4 @@
        changed-to-nil (config/with-env :prod (config/value :fou :my-barre))]
    [barre changed-barre changed-to-false changed-to-nil])
  => ["127.0.0.1" "1.2.3.4" false "127.0.0.1"])
+
