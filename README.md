@@ -72,11 +72,11 @@ if-env and when-env.
   The following forms are general purpose conditionals (not assertions of
   environment restrictions).
   ```clojure
-    (if-env :test "hello" "goodbye")
+    (config/if-env :test "hello" "goodbye")
   ```
 
   ```clojure
-    (when-env :dev ,,,)
+    (config/when-env :dev ,,,)
   ```
 
 Helpful info / warnings that can be turned off with MILIEU_QUIET system variable:
