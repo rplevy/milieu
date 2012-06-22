@@ -55,19 +55,22 @@ application.
 restricted in with-env or only-env, or more generally conditional using
 if-env and when-env.
 
-  If env is prod, the code in the body will not be exercised, an exception
-  will be thrown instead:
   ```clojure
+    ;; If env is prod, the code in the body will not be exercised,
+    ;; an exception is thrown instead:
     (defn -main [env & args]
       (config/with-env [env :only [:test :dev]] ,,,))
   ```
 
-  Alternatively (for example if you aren't in the context of a with-env)
+  Alternatively (for example if you aren't in the context of a with-env)...
   ```clojure
+    ;; If env is prod, the code in the body will not be exercised,
+    ;; an exception is thrown instead:
     (config/only-env [:test :dev] ,,,)
   ```
 
-  These forms are general purpose conditionals, not asserting restrictions:
+  The following forms are general purpose conditionals (not assertions of
+  environment restrictions).
   ```clojure
     (if-env :test "hello" "goodbye")
   ```
