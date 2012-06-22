@@ -27,6 +27,16 @@
    (some-fun :test) => "9.9.9.9"
    (some-fun :prod) => (throws Exception)))
 
+(facts
+ "only-env observes specified restrictions"
+ (let [some-fun (fn []
+                  (config/only-env
+                   [:dev :test]
+                   (config/value :fou :barre)))]
+   (some-fun) => "127.0.0.1" ; milieu default is :dev
+   (config/with-env :test (some-fun)) => "9.9.9.9"
+   (config/with-env :prod (some-fun)) => (throws Exception)))
+
 (against-background
  [(around :facts (config/with-env :prod ?form))]
  (facts

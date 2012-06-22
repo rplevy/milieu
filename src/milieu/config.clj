@@ -58,6 +58,15 @@
        (binding [*env* (or (keyword ~env) *env*)]
          ~@body))))
 
+(defmacro only-env
+  "similar to :only option in with-env but allows for assertion of environment
+   restricted code more generally, including when the environement is set by
+   the system variable and not by with-env"
+  [env-vector & body]
+  `(if (not ((set ~env-vector) *env*))
+     (throw (Exception. "Access to this environment is prohibited."))
+     (do ~@body)))
+
 (defn value*
   [[k & ks] & optional?]
   (let [env-value      (get-in @configuration (concat [*env*    k] ks))
