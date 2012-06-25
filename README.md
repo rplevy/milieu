@@ -44,7 +44,7 @@ the popular YAML file format.
   Access using:
   ```clojure
     (config/value :smiles 0 :mary) => "8-)"
-    (config/value :smiles 1 :fread) => "-__-"
+    (config/value :smiles 1 :fred) => "-__-"
   ```
 
   This will access the value in
@@ -71,8 +71,8 @@ the popular YAML file format.
 application.
   ```clojure
     (config/commandline-overrides! args)
-      (config/with-env env
-        ... )
+    (config/with-env env
+      ... )
   ```
 
 * In cases where the environment can be variable, code evaluation can by
