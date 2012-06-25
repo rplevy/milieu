@@ -39,8 +39,8 @@
 
 (facts
  "you can use vectors"
- (config/value :fvvvv 0 :bar) => 1
- (config/value :fvvvv 1 :bar) => 3)
+ (config/value :smiles 0 :mary) => "8-)"
+ (config/value :smiles 1 :fred) => "-__-")
 
 (against-background
  [(around :facts (config/with-env :prod ?form))]
