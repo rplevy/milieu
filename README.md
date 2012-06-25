@@ -35,16 +35,16 @@ the popular YAML file format.
   Another example:
   ```yaml
     dev:
-      my:
-        - bar: 1
-          baz: 2
-        - bar: 3
-          baz: 4
+      smiles:
+        - mary: "8-)"
+          fred: ":-|"
+        - mary: "*_*"
+          fred: "-__-"
   ```
   Access using:
   ```clojure
-  (config/value :my 0 :bar) => 1
-  (config/value :my 1 :baz) => 4
+    (config/value :smiles 0 :mary) => "8-)"
+    (config/value :smiles 1 :fread) => "-__-"
   ```
 
   This will access the value in
