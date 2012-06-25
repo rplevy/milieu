@@ -135,6 +135,7 @@ http://clojars.org/milieu
 
 ```shell
 $ myprogram prod --fou.barre Fred --some.setting 127.0.0.1
+$ myprogram dev --smiles.1.mary ":D"
 ```
 
 ## License
