@@ -19,15 +19,22 @@ the popular YAML file format.
   ```
   This will access the value in
   ```yaml
-  dev|test|...:
+  dev:
     my:
       config:
-        value:
+        value: 2
+
+    ...
+
+  test:
+    my:
+      config:
+        value: 3
   ```
 
   Another example:
   ```yaml
-  dev|test|...:
+  dev:
     my:
       - bar: 1
         baz: 2
