@@ -19,27 +19,27 @@ the popular YAML file format.
   ```
   This will access the value in
   ```yaml
-  dev:
-    my:
-      config:
-        value: 2
+    dev:
+      my:
+        config:
+          value: 2
 
     ...
 
-  test:
-    my:
-      config:
-        value: 3
+    test:
+      my:
+        config:
+          value: 3
   ```
 
   Another example:
   ```yaml
-  dev:
-    my:
-      - bar: 1
-        baz: 2
-      - bar: 3
-        baz: 4
+    dev:
+      my:
+        - bar: 1
+          baz: 2
+        - bar: 3
+          baz: 4
   ```
   Access using:
   ```clojure
