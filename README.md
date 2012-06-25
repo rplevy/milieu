@@ -19,10 +19,32 @@ the popular YAML file format.
   ```
   This will access the value in
   ```yaml
-  dev|test|...:
-    my:
-      config:
-        value:
+    dev:
+      my:
+        config:
+          value: 2
+
+    ...
+
+    test:
+      my:
+        config:
+          value: 3
+  ```
+
+  Another example:
+  ```yaml
+    dev:
+      smiles:
+        - mary: "8-)"
+          fred: ":-|"
+        - mary: "*_*"
+          fred: "-__-"
+  ```
+  Access using:
+  ```clojure
+    (config/value :smiles 0 :mary) => "8-)"
+    (config/value :smiles 1 :fred) => "-__-"
   ```
 
   Specifying config values as optional:
@@ -47,8 +69,8 @@ the popular YAML file format.
 application.
   ```clojure
     (config/commandline-overrides! args)
-      (config/with-env env
-        ... )
+    (config/with-env env
+      ... )
   ```
 
 * In cases where the environment can be variable, code evaluation can by
@@ -113,6 +135,7 @@ http://clojars.org/milieu
 
 ```shell
 $ myprogram prod --fou.barre Fred --some.setting 127.0.0.1
+$ myprogram dev --smiles.1.mary ":D"
 ```
 
 ## License

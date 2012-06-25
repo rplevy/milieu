@@ -2,7 +2,12 @@ dev:
     fou:
         barre: "127.0.0.1"
         car:   54
-    size:      small 
+    size:      small
+    smiles:
+      - mary: "8-)"
+        fred: ":-|"
+      - mary: "*_*"
+        fred: "-__-"
     magic:     false
     skidoo:    23
 
