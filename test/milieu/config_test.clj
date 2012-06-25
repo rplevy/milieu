@@ -40,7 +40,9 @@
 (facts
  "you can use vectors"
  (config/value :smiles 0 :mary) => "8-)"
- (config/value :smiles 1 :fred) => "-__-")
+ (config/value :smiles 1 :fred) => "-__-"
+ (config/value| :smiles 1 :mary) => "*_*"
+ (config/value| [:smiles 1 :mary] "ಠ_ಠ") => "*_*")
 
 (against-background
  [(around :facts (config/with-env :prod ?form))]
@@ -122,9 +124,16 @@
  (#'config/commandline-overrides* ["--fou.barre" "skidoo"])
  => #(= "skidoo" (str (get-in % [:cmdargs :fou :barre])))
 
+ (#'config/commandline-overrides* ["--smiles.1.mary" "\":D\""])
+ => #(= ":D" (str (get-in % [:cmdargs :smiles 1 :mary])))
+
  (do (config/commandline-overrides! ["--fou.barre" "1"])
      (config/with-env :cmdargs (config/value :fou :barre)))
  => 1
+
+ (do (config/commandline-overrides! ["--smiles.0.fred" "\":{)\""])
+     (config/with-env :cmdargs (config/value :smiles 0 :fred)))
+ => ":{)"
 
  ;; override means it should take precedence over the active environment
  (let [_ (swap! @#'config/configuration

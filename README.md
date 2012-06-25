@@ -47,8 +47,6 @@ the popular YAML file format.
     (config/value :smiles 1 :fred) => "-__-"
   ```
 
-  This will access the value in
-
   Specifying config values as optional:
   ```clojure
   (config/value| :my :config :value) ; same as config/value except doesn’t warn if it’s not found
