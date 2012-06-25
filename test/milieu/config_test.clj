@@ -37,6 +37,11 @@
    (config/with-env :test (some-fun)) => "9.9.9.9"
    (config/with-env :prod (some-fun)) => (throws Exception)))
 
+(facts
+ "you can use vectors"
+ (config/value :fvvvv 0 :bar) => 1
+ (config/value :fvvvv 1 :bar) => 3)
+
 (against-background
  [(around :facts (config/with-env :prod ?form))]
  (facts
@@ -133,4 +138,3 @@
        changed-to-nil (config/with-env :prod (config/value :fou :my-barre))]
    [barre changed-barre changed-to-false changed-to-nil])
  => ["127.0.0.1" "1.2.3.4" false "127.0.0.1"])
-

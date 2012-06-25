@@ -2,7 +2,12 @@ dev:
     fou:
         barre: "127.0.0.1"
         car:   54
-    size:      small 
+    size:      small
+    fvvvv:
+      - bar: 1
+        baz: 2
+      - bar: 3
+        baz: 4
     magic:     false
     skidoo:    23
 

@@ -110,9 +110,10 @@
   [config-map]
   (walk/prewalk
    (fn [form]
-     (if (and (string? form)
-              (= \: (first form)))
-       (keyword (apply str (rest form))) form))
+     (cond (and (string? form) (= \: (first form)))
+           (keyword (apply str (rest form))),
+           (seq? form) (vec form),
+           :else form))
    config-map))
 
 (defn load-config

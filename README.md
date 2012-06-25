@@ -25,6 +25,23 @@ the popular YAML file format.
         value:
   ```
 
+  Another example:
+  ```yaml
+  dev|test|...:
+    my:
+      - bar: 1
+        baz: 2
+      - bar: 3
+        baz: 4
+  ```
+  Access using:
+  ```clojure
+  (config/value :my 0 :bar) => 1
+  (config/value :my 1 :baz) => 4
+  ```
+
+  This will access the value in
+
   Specifying config values as optional:
   ```clojure
   (config/value| :my :config :value) ; same as config/value except doesn’t warn if it’s not found
