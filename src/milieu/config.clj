@@ -102,7 +102,7 @@
   (if (vector? ks)
     `(or (value* ~ks :optional)
          ~alt)
-    (let [ks (take-while keyword? (flatten [ks alt more]))]
+    (let [ks (keep identity (flatten [ks alt more]))]
       `(value* [~@ks] :optional))))
 
 (defn ^:private keywordize
@@ -110,9 +110,10 @@
   [config-map]
   (walk/prewalk
    (fn [form]
-     (if (and (string? form)
-              (= \: (first form)))
-       (keyword (apply str (rest form))) form))
+     (cond (and (string? form) (= \: (first form)))
+           (keyword (apply str (rest form))),
+           (seq? form) (vec form),
+           :else form))
    config-map))
 
 (defn load-config
@@ -129,11 +130,13 @@
 
 (defn ^:private commandline-overrides* [args]
   (assert (even? (count args)))
-  (let [cmdarg->cfgkey
+  (let [index-or-key #(if (re-matches #"\d+" %)
+                        (Integer/parseInt %) (keyword %))
+        cmdarg->cfgkey
         (fn [s] (-<> s
                      (str/replace <> #"^-+" "")
                      (str/split <> #"\.")
-                     (map keyword <>)
+                     (map index-or-key <>)
                      vec))]
     {:cmdargs
      (reduce-kv
