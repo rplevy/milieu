@@ -147,3 +147,5 @@
        changed-to-nil (config/with-env :prod (config/value :fou :my-barre))]
    [barre changed-barre changed-to-false changed-to-nil])
  => ["127.0.0.1" "1.2.3.4" false "127.0.0.1"])
+
+(fact (config/environments) => #{:dev :test :prod})

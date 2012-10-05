@@ -73,6 +73,9 @@
 (defmacro when-env [env & body]
   `(when (= *env* ~env) ~@body))
 
+(defn environments "list all available environments" []
+  (set (keys @configuration)))
+
 (defn value*
   [[k & ks] & optional?]
   (let [env-value      (get-in @configuration (concat [*env*    k] ks))
