@@ -76,6 +76,9 @@
 (defn environments "list all available environments" []
   (set (keys @configuration)))
 
+(defn env? "check if the env keyword refers to an existing environment" [env]
+  ((environments) env))
+
 (defn value*
   [[k & ks] & optional?]
   (let [env-value      (get-in @configuration (concat [*env*    k] ks))
