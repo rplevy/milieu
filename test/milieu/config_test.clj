@@ -107,46 +107,44 @@
 (facts
  "command-line overrides"
  (#'config/commandline-overrides* ["--fou.barre" "1" "--skidoo" "(1 2 3)"])
- => {:cmdargs {:skidoo '(1 2 3), :fou {:barre 1}}}
+ => {:cmdargs {:skidoo "(1 2 3)", :fou {:barre 1}}}
 
  (#'config/commandline-overrides* ["--fou" "1" "--skidoo" "(1 2 3)"])
- => {:cmdargs {:skidoo '(1 2 3), :fou 1}}
+ => {:cmdargs {:skidoo "(1 2 3)", :fou 1}}
 
  (#'config/commandline-overrides* ["-fou" "1" "-skidoo" "(1 2 3)"])
- => {:cmdargs {:skidoo '(1 2 3), :fou 1}}
+ => {:cmdargs {:skidoo "(1 2 3)", :fou 1}}
 
  (#'config/commandline-overrides* ["fou" "1" "skidoo" "(1 2 3)"])
- => {:cmdargs {:skidoo '(1 2 3), :fou 1}}
+ => {:cmdargs {:skidoo "(1 2 3)", :fou 1}}
 
- (#'config/commandline-overrides* ["--fou.barre" "\"skidoo\""])
+ (#'config/commandline-overrides* ["--fou.barre" "skidoo"])
  => {:cmdargs {:fou {:barre "skidoo"}}}
 
  (#'config/commandline-overrides* ["--fou.barre" "skidoo"])
  => #(= "skidoo" (str (get-in % [:cmdargs :fou :barre])))
 
- (#'config/commandline-overrides* ["--smiles.1.mary" "\":D\""])
+ (#'config/commandline-overrides* ["--smiles.1.mary" ":D"])
  => #(= ":D" (str (get-in % [:cmdargs :smiles 1 :mary])))
 
  (do (config/commandline-overrides! ["--fou.barre" "1"])
      (config/with-env :cmdargs (config/value :fou :barre)))
  => 1
 
- (do (config/commandline-overrides! ["--smiles.0.fred" "\":{)\""])
+ (do (config/commandline-overrides! ["--smiles.0.fred" ":{)"])
      (config/with-env :cmdargs (config/value :smiles 0 :fred)))
  => ":{)"
 
  ;; override means it should take precedence over the active environment
  (let [_ (swap! @#'config/configuration
-                #(update-in % [:prod :fou :my-barre] (constantly "127.0.0.1")))
+                #(assoc-in % [:prod :fou :my-barre] "127.0.0.1"))
        barre (config/with-env :prod (config/value :fou :my-barre))
-       _ (config/commandline-overrides! ["--fou.my-barre" "\"1.2.3.4\""])
+       _ (config/commandline-overrides! ["--fou.my-barre" "1.2.3.4"])
        changed-barre (config/with-env :prod (config/value :fou :my-barre))
        _ (config/commandline-overrides! ["--fou.my-barre" "false"])
-       changed-to-false (config/with-env :prod (config/value :fou :my-barre))
-       _ (config/commandline-overrides! ["--fou.my-barre" "nil"])
-       changed-to-nil (config/with-env :prod (config/value :fou :my-barre))]
-   [barre changed-barre changed-to-false changed-to-nil])
- => ["127.0.0.1" "1.2.3.4" false "127.0.0.1"])
+       changed-to-false (config/with-env :prod (config/value :fou :my-barre))]
+   [barre changed-barre changed-to-false])
+ => ["127.0.0.1" "1.2.3.4" false])
 
 (facts
  "about checking environment as valid/existing"
