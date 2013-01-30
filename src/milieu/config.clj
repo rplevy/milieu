@@ -143,10 +143,23 @@
                      (str/replace <> #"^-+" "")
                      (str/split <> #"\.")
                      (map index-or-key <>)
-                     vec))]
+                     vec))
+        read-string' (fn [s]
+                       #_"read-string could be used as it is, but it is tiresome
+                          to enter strings like '\"....\"' in command-line args.
+                          To address this, accept tokens verbatim and string-ify
+                          non-keyword, non-number tokens. Tokens that don't play
+                          well with the reader are also interpreted as strings."
+                       (let [x (binding [*read-eval* false]
+                                 (try (read-string s) (catch Exception e s)))]
+                         (if (or (keyword? x)
+                                 (= (class x) java.lang.Boolean)
+                                 (isa? (class x) java.lang.Number))
+                           x
+                           (str s))))]
     {:cmdargs
      (reduce-kv
-      #(assoc-in %1 (cmdarg->cfgkey %2) (read-string %3))
+      #(assoc-in %1 (cmdarg->cfgkey %2) (read-string' %3))
       {} (apply hash-map args))}))
 
 (defn commandline-overrides!
