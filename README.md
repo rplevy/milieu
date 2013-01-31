@@ -49,7 +49,7 @@ the popular YAML file format.
 
   Specifying config values as optional:
   ```clojure
-  (config/value| :my :config :value) ; same as config/value except doesn’t warn if it’s not found
+  (config/value| :my :config :value) ; same as config/value except that because it is optional it doesn’t warn when not found
   (config/value| [:my :config :value] "alternate value") ; provide alternate value
   ```
 
@@ -101,13 +101,7 @@ if-env and when-env.
     (config/when-env :dev ,,,)
   ```
 
-Helpful info / warnings that can be turned off with MILIEU_QUIET system variable:
-
-* WARNING: system variable MILIEU_ENV was not set. Default value will be "dev"
-
-* WARNING: requested config setting [:fou :barre] not found!
-
-* INFO: to enable auto-load, name your config-file configure.yml.
+* Warning when non-optional config setting is not found (you can disable this warning by setting system environment variable MILIEU_QUIET).
 
 ## Use
 
