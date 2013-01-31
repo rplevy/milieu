@@ -142,13 +142,15 @@
                           To address this, accept tokens verbatim and string-ify
                           non-keyword, non-number tokens. Tokens that don't play
                           well with the reader are also interpreted as strings."
-                       (let [x (binding [*read-eval* false]
-                                 (try (read-string s) (catch Exception e s)))]
-                         (if (or (keyword? x)
-                                 (= (class x) java.lang.Boolean)
-                                 (isa? (class x) java.lang.Number))
-                           x
-                           (str s))))]
+                       (if (re-find #"\s" s)
+                         s
+                         (let [x (binding [*read-eval* false]
+                                   (try (read-string s) (catch Exception e s)))]
+                           (if (or (keyword? x)
+                                   (= (class x) java.lang.Boolean)
+                                   (isa? (class x) java.lang.Number))
+                             x
+                             (str s)))))]
     {:cmdargs
      (reduce-kv
       #(assoc-in %1 (cmdarg->cfgkey %2) (read-string' %3))

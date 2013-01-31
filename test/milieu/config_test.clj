@@ -112,6 +112,9 @@
  (#'config/commandline-overrides* ["--fou" "1" "--skidoo" "(1 2 3)"])
  => {:cmdargs {:skidoo "(1 2 3)", :fou 1}}
 
+ (#'config/commandline-overrides* ["--fou" "1" "--skidoo" "1 2 3"])
+ => {:cmdargs {:skidoo "1 2 3", :fou 1}}
+
  (#'config/commandline-overrides* ["-fou" "1" "-skidoo" "(1 2 3)"])
  => {:cmdargs {:skidoo "(1 2 3)", :fou 1}}
 
