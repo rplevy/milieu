@@ -26,21 +26,13 @@
 (defn ^:private warn [message & format-args]
   (when-not (getenv quiet-sysvar-name) (warn* message format-args)))
 
-(defn ^:private info [message & format-args]
-  (when-not (getenv quiet-sysvar-name)
-    (do (log/info (apply format message format-args))
-        nil)))
-
 ;; Determining the environment: if *env* is bound (as when using with-env),
 ;; use that.  If not, use the default, set at compile time.  If the env var
 ;; MILIEU_ENV exists, use that, otherwise default to dev.
 
 (def ^:dynamic *env*
   (or (keyword (getenv env-sysvar-name))
-      (do (warn
-           "system variable %s was not set. Default value will be \"dev\"."
-           env-sysvar-name)
-          :dev)))
+      :dev))
 
 (defmacro with-env
   "bind the environment to a value for the calling context.
@@ -168,6 +160,5 @@
   [args]
   (swap! overrides (fn [m] (merge m (commandline-overrides* args)))))
 
-(if-not (io/resource default-config-name)
-  (info "to enable auto-load, name your config-file %s." default-config-name)
-  (load-config default-config-name))
+(when (io/resource default-config-name) ; auto-load if file name convention
+  (load-config default-config-name))    ; for auto-load is followed.
