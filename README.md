@@ -66,10 +66,22 @@ the popular YAML file format.
 * Specify the default environment using the MILIEU_ENV system variable.
 
 * Override environment-specific settings using arguments to your command-line
-application.
+application, or other kinds of sources.
   ```clojure
-    (config/commandline-overrides! args)
-    (config/with-env env
+    (config/with-env :dev
+      :overrides {:src args
+                  :as :cli} ; args from -main function
+      ... )
+
+    (config/with-env :dev
+      :overrides {:src {:hello {:world 1}}
+                  :as :data}
+      ... )
+
+    (config/with-env :dev
+      :overrides {:src [[:hello] 2,
+                        [:fou :my-barre] "1.2.3.4"]
+                  :as :assoc-in}
       ... )
   ```
 
