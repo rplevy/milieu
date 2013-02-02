@@ -105,49 +105,90 @@
  (provided (#'config/warn* irrelevant irrelevant) => true :times 0))
 
 (facts
- "command-line overrides"
- (#'config/commandline-overrides* ["--fou.barre" "1" "--skidoo" "(1 2 3)"])
- => {:cmdargs {:skidoo "(1 2 3)", :fou {:barre 1}}}
+ "cli as source"
+ (#'config/cli ["--fou.barre" "1", "--skidoo" "1 2 3"])
+ => [[:fou :barre] 1, [:skidoo] "1 2 3"]
+ (#'config/cli ["--fou" "1", "--skidoo" "(1 2 3)"])
+ => [[:fou] 1, [:skidoo] "(1 2 3)"])
 
- (#'config/commandline-overrides* ["--fou" "1" "--skidoo" "(1 2 3)"])
- => {:cmdargs {:skidoo "(1 2 3)", :fou 1}}
+(facts
+ "overriding values"
+ (config/with-env :dev
+   :overrides {:src ["--fou.barre" "1", "--skidoo" "(1 2 3)"] :as :cli}
+   config/*overrides*)
+ => {:skidoo "(1 2 3)", :fou {:barre 1}}
 
- (#'config/commandline-overrides* ["--fou" "1" "--skidoo" "1 2 3"])
- => {:cmdargs {:skidoo "1 2 3", :fou 1}}
+ (config/with-env :dev
+   :overrides {:src ["--fou" "1", "--skidoo" "(1 2 3)"] :as :cli}
+   config/*overrides*)
+ => {:skidoo "(1 2 3)", :fou 1}
 
- (#'config/commandline-overrides* ["-fou" "1" "-skidoo" "(1 2 3)"])
- => {:cmdargs {:skidoo "(1 2 3)", :fou 1}}
+ (config/with-env :dev
+   :overrides {:src ["--fou" "1", "--skidoo" "1 2 3"] :as :cli}
+   config/*overrides*)
+ => {:skidoo "1 2 3", :fou 1}
 
- (#'config/commandline-overrides* ["fou" "1" "skidoo" "(1 2 3)"])
- => {:cmdargs {:skidoo "(1 2 3)", :fou 1}}
+ (config/with-env :dev
+   :overrides {:src ["-fou" "1", "-skidoo" "(1 2 3)"] :as :cli}
+   config/*overrides*)
+ => {:skidoo "(1 2 3)", :fou 1}
 
- (#'config/commandline-overrides* ["--fou.barre" "skidoo"])
- => {:cmdargs {:fou {:barre "skidoo"}}}
+ (config/with-env :dev
+   :overrides {:src [[:fou] 1, [:skidoo] "(1 2 3)"] :as :assoc-in}
+   config/*overrides*)
+ => {:skidoo "(1 2 3)", :fou 1}
 
- (#'config/commandline-overrides* ["--fou.barre" "skidoo"])
- => #(= "skidoo" (str (get-in % [:cmdargs :fou :barre])))
+ (config/with-env :dev
+   :overrides {:src {:fou 1, :skidoo "(1 2 3)"} :as :data}
+   config/*overrides*)
+ => {:skidoo "(1 2 3)", :fou 1}
 
- (#'config/commandline-overrides* ["--smiles.1.mary" ":D"])
- => #(= ":D" (str (get-in % [:cmdargs :smiles 1 :mary])))
+ (config/with-env :dev
+   :overrides {:src ["fou" "1", "skidoo" "(1 2 3)"] :as :cli}
+   config/*overrides*)
+ => {:skidoo "(1 2 3)", :fou 1}
 
- (do (config/commandline-overrides! ["--fou.barre" "1"])
-     (config/with-env :cmdargs (config/value :fou :barre)))
+ (config/with-env :dev
+   :overrides {:src ["--fou.barre" "skidoo"] :as :cli}
+   config/*overrides*)
+ => {:fou {:barre "skidoo"}}
+
+ (config/with-env :dev
+   :overrides {:src ["--fou.barre" "1"] :as :cli}
+   (config/value :fou :barre))
  => 1
 
- (do (config/commandline-overrides! ["--smiles.0.fred" ":{)"])
-     (config/with-env :cmdargs (config/value :smiles 0 :fred)))
+ (config/with-env :dev
+   :overrides {:src ["--smiles.0.fred" ":{)"] :as :cli}
+   (config/value :smiles 0 :fred))
+ => ":{)"
+
+ (config/with-env :dev
+   :overrides {:src [[:smiles 0 :fred] ":{)"] :as :assoc-in}
+   (config/value :smiles 0 :fred))
+ => ":{)"
+
+ (config/with-env :dev
+   :overrides {:src {:smiles [{:fred ":{)"}]} :as :data}
+   (config/value :smiles 0 :fred))
  => ":{)"
 
  ;; override means it should take precedence over the active environment
  (let [_ (swap! @#'config/configuration
                 #(assoc-in % [:prod :fou :my-barre] "127.0.0.1"))
        barre (config/with-env :prod (config/value :fou :my-barre))
-       _ (config/commandline-overrides! ["--fou.my-barre" "1.2.3.4"])
-       changed-barre (config/with-env :prod (config/value :fou :my-barre))
-       _ (config/commandline-overrides! ["--fou.my-barre" "false"])
-       changed-to-false (config/with-env :prod (config/value :fou :my-barre))]
-   [barre changed-barre changed-to-false])
- => ["127.0.0.1" "1.2.3.4" false])
+       [hello barre'] (config/with-env :prod
+                        :overrides {:src [[:hello]         2
+                                          [:fou :my-barre] "1.2.3.4"]
+                                    :as :assoc-in}
+                        [(config/value :hello)
+                         (config/value :fou :my-barre)])
+       barre'' (config/with-env :prod
+                 :overrides {:src [[:fou :my-barre] false]
+                             :as :assoc-in}
+                 (config/value :fou :my-barre))]
+   [barre hello barre' barre''])
+ => ["127.0.0.1" 2 "1.2.3.4" false])
 
 (facts
  "about checking environment as valid/existing"

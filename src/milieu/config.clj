@@ -8,7 +8,7 @@
 
 (defonce ^:private configuration (atom {}))
 
-(defonce ^:private overrides (atom {}))
+(def ^{:private false :dynamic true} *overrides* {})
 
 (def ^:private env-sysvar-name "MILIEU_ENV")
 
@@ -34,20 +34,92 @@
   (or (keyword (getenv env-sysvar-name))
       :dev))
 
+(defn ^:private cli [args]
+  (let [index-or-key #(if (re-matches #"\d+" %)
+                        (Integer/parseInt %) (keyword %))
+        cmdarg->cfgkey
+        (fn [s] (-<> s
+                     (str/replace <> #"^-+" "")
+                     (str/split <> #"\.")
+                     (map index-or-key <>)
+                     vec))
+        ;; TODO: tools.cli would be useful here
+        read-string' (fn [s]
+                       #_"read-string could be used as it is, but it is tiresome
+                          to enter strings like '\"....\"' in command-line args.
+                          To address this, accept tokens verbatim and string-ify
+                          non-keyword, non-number tokens. Tokens that don't play
+                          well with the reader are also interpreted as strings."
+                       (if (re-find #"\s" s)
+                         s
+                         (let [x (binding [*read-eval* false]
+                                   (try (read-string s) (catch Exception e s)))]
+                           (if (or (keyword? x)
+                                   (= (class x) java.lang.Boolean)
+                                   (isa? (class x) java.lang.Number))
+                             x
+                             (str s)))))]
+    (reduce-kv (fn [r cmdarg cmdval]
+                 (into r [(cmdarg->cfgkey cmdarg) (read-string' cmdval)]))
+               []
+               (apply hash-map args))))
+
+(defn ^:private resolve-format
+  "if :as format is not specified, determine the format based on source"
+  [src-spec]
+  (when src-spec
+    (or (:as src-spec)
+        (let [resolve-format*
+              (fn [src-spec]
+                (condp re-find src-spec
+                  #"\.ya?ml$" :yml
+                  #"\.json$" :json
+                  #"\.edn$" :edn
+                  (throw (Exception. "Unable to resolve config format."))))]
+          (if (string? src-spec)
+            (resolve-format* src-spec)
+            (resolve-format* (:src src-spec)))))))
+
+(defmulti src resolve-format)
+
+(defmethod src nil [_] {})
+
+(defmethod src :yml [src-spec]  (throw (Exception. "TODO")))
+
+(defmethod src :json [src-spec] (throw (Exception. "TODO")))
+
+(defmethod src :edn [src-spec]  (throw (Exception. "TODO")))
+
+(defmethod src :assoc-in [src-spec]
+  (reduce-kv assoc-in {} (apply hash-map (:src src-spec))))
+
+(defmethod src :cli [src-spec]
+  (src (assoc (update-in src-spec [:src] cli)
+         :as :assoc-in)))
+
+(defmethod src :data [src-spec]
+  (:src src-spec))
+
 (defmacro with-env
   "bind the environment to a value for the calling context.
 
    Env can optionally be a vector containing the env and options. Presently
    the option :only is supported, which stops execution if the provided
-   env is not in the limited set."
+   env is not in the limited set.
+
+   Overrides usage: (with-env :dev :overrides {:src <DATA> :as <FORMAT>} ...)"
   [env & body]
-  (let [[env {:keys [only] :as options}]
-        (if (vector? env)
-          [(first env) (apply hash-map (rest env))]
-          [env])]
+  (let [[env {:keys [only] :as options}] (if (vector? env)
+                                           [(first env)
+                                            (apply hash-map (rest env))]
+                                           [env])
+        [src-spec body]                  (if (= (first body) :overrides)
+                                           [(second body) (next (next body))]
+                                           [nil body])]
     `(if (and ~only (not ((set ~only) (keyword ~env))))
        (throw (Exception. "Access to this environment is prohibited."))
-       (binding [*env* (or (keyword ~env) *env*)]
+       (binding [*env* (or (keyword ~env) *env*)
+                 *overrides* (src ~src-spec)]
          ~@body))))
 
 (defmacro only-env
@@ -73,8 +145,8 @@
 
 (defn value*
   [[k & ks] & optional?]
-  (let [env-value      (get-in @configuration (concat [*env*    k] ks))
-        override-value (get-in @overrides     (concat [:cmdargs k] ks))]
+  (let [env-value      (get-in @configuration (concat [*env* k] ks))
+        override-value (get-in *overrides*    (cons          k  ks))]
     (cond (or override-value (false? override-value)) override-value
           (or env-value (false? env-value))           env-value
           :none-provided (when-not optional?
@@ -125,42 +197,6 @@
                        slurp
                        yaml/parse-string
                        keywordize)))))
-
-(defn ^:private commandline-overrides* [args]
-  (assert (even? (count args)))
-  (let [index-or-key #(if (re-matches #"\d+" %)
-                        (Integer/parseInt %) (keyword %))
-        cmdarg->cfgkey
-        (fn [s] (-<> s
-                     (str/replace <> #"^-+" "")
-                     (str/split <> #"\.")
-                     (map index-or-key <>)
-                     vec))
-        read-string' (fn [s]
-                       #_"read-string could be used as it is, but it is tiresome
-                          to enter strings like '\"....\"' in command-line args.
-                          To address this, accept tokens verbatim and string-ify
-                          non-keyword, non-number tokens. Tokens that don't play
-                          well with the reader are also interpreted as strings."
-                       (if (re-find #"\s" s)
-                         s
-                         (let [x (binding [*read-eval* false]
-                                   (try (read-string s) (catch Exception e s)))]
-                           (if (or (keyword? x)
-                                   (= (class x) java.lang.Boolean)
-                                   (isa? (class x) java.lang.Number))
-                             x
-                             (str s)))))]
-    {:cmdargs
-     (reduce-kv
-      #(assoc-in %1 (cmdarg->cfgkey %2) (read-string' %3))
-      {} (apply hash-map args))}))
-
-(defn commandline-overrides!
-  "override values, regardless of environment.
-   $ myprogram prod --fou.barre Fred --db.host 127.0.0.1"
-  [args]
-  (swap! overrides (fn [m] (merge m (commandline-overrides* args)))))
 
 (when (io/resource default-config-name) ; auto-load if file name convention
   (load-config default-config-name))    ; for auto-load is followed.
