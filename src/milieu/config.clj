@@ -80,11 +80,28 @@
             (resolve-format* src-spec)
             (resolve-format* (:src src-spec)))))))
 
+(defn ^:private keywordize
+  "recursively convert strings that should be keywords into keywords"
+  [config-map]
+  (walk/prewalk
+   (fn [form]
+     (cond (and (string? form) (= \: (first form)))
+           (keyword (apply str (rest form))),
+           (seq? form) (vec form),
+           :else form))
+   config-map))
+
 (defmulti src resolve-format)
 
 (defmethod src nil [_] {})
 
-(defmethod src :yml [src-spec]  (throw (Exception. "TODO")))
+(defmethod src :yml [src-spec]
+  (let [config-file (io/resource (if (string? src-spec)
+                                   src-spec
+                                   (:src src-spec)))]
+    (if-not config-file
+      (throw (Exception. "config file not found."))
+      (-> config-file, slurp, yaml/parse-string, keywordize))))
 
 (defmethod src :json [src-spec] (throw (Exception. "TODO")))
 
@@ -175,28 +192,11 @@
     (let [ks (keep identity (flatten [ks alt more]))]
       `(value* [~@ks] :optional))))
 
-(defn ^:private keywordize
-  "helper function for load-config"
-  [config-map]
-  (walk/prewalk
-   (fn [form]
-     (cond (and (string? form) (= \: (first form)))
-           (keyword (apply str (rest form))),
-           (seq? form) (vec form),
-           :else form))
-   config-map))
-
 (defn load-config
-  "load the yaml config file"
-  [config-name]
-  (let [config-file (io/resource config-name)]
-    (if-not config-file (throw (Exception. "config file not found.")))
-    (swap! configuration
-           #(merge %
-                   (-> config-file
-                       slurp
-                       yaml/parse-string
-                       keywordize)))))
+  "load configuration source"
+  [src-spec]
+  ;; TODO: recursive merge with preexisting config
+  (swap! configuration #(merge % (src src-spec))))
 
 (when (io/resource default-config-name) ; auto-load if file name convention
   (load-config default-config-name))    ; for auto-load is followed.
