@@ -60,7 +60,7 @@
                              x
                              (str s)))))]
     (reduce-kv (fn [r cmdarg cmdval]
-                 (into r [(cmdarg->cfgkey cmdarg) (read-string' cmdval)]))
+                 (conj r (cmdarg->cfgkey cmdarg) (read-string' cmdval)))
                []
                (apply hash-map args))))
 
