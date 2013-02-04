@@ -124,7 +124,11 @@
    the option :only is supported, which stops execution if the provided
    env is not in the limited set.
 
-   Overrides usage: (with-env :dev :overrides {:src <DATA> :as <FORMAT>} ...)"
+   Usage:
+
+    (with-env <ENV> ...)
+    (with-env [<ENV> :only [<ENV1>, <ENV2>, ... ]]
+    (with-env <ENV> :overrides {:src <DATA> :as <FORMAT>} ...)"
   [env & body]
   (let [[env {:keys [only] :as options}] (if (vector? env)
                                            [(first env)
