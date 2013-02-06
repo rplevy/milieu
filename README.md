@@ -8,8 +8,7 @@ The environmentally friendly configuration tool.
 
 ## Features:
 
-* Set up environment-specific configuration for your Clojure application, using
-the popular YAML file format.
+* Set up environment-specific configuration for your Clojure application. Supported file formats include YAML, JSON, and EDN. Supported non-file methods of configuration include native Clojure data, [(IN PROGRESS) system-environment-variables, and command-line options].
 
 * Access config values:
 
@@ -55,7 +54,14 @@ the popular YAML file format.
 
 * Optionally auto-load config file.
   * using the default filename of "configure.yml" enables autoload
-  * any other config file name can be specified by calling load-config
+  * other types of file and non-file data sources can be specified using load-config. Examples:
+  ```clojure
+  (config/load-config "my-config.yml")
+
+  (config/load-config {:src "my-config" :as :yml})
+
+  (config/load-config {:src "my-config" :as :edn})
+  ```
 
 * Bind the environment within a calling context using with-env.
   ```clojure
