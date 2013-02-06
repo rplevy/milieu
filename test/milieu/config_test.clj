@@ -3,20 +3,48 @@
   (require [milieu.config :as config]))
 
 (facts
- ;; make sure we can load and parse a config file
+ "make sure we can load and parse a config file"
 
  (do
    (swap! @#'config/configuration (constantly {}))
    @@#'config/configuration)
  => {}
 
- (config/load-config "non-existent-file.yml") => (throws Exception)
+ (config/load-config "non-existent-file.yml") => (throws Exception))
 
- ;; this also sets up state for the following tests
+(facts
+ "all of the example config files are identical, but in different formats.
+  all of the config loading methods should result in same data structures."
 
- (do (config/load-config "configure.example.yml")
-     (:dev @@#'config/configuration))
- => map?)
+ ;; and this also sets up state for the following tests
+
+ (let [from-yml      (do (reset! @#'config/configuration {})
+                         (config/load-config       "configure.example.yml")
+                         @@#'config/configuration)
+       from-yml-alt  (do (reset! @#'config/configuration {})
+                      (config/load-config {:src "configure.example.yml"
+                                           :as :yml})
+                      @@#'config/configuration)
+       from-json     (do (reset! @#'config/configuration {})
+                         (config/load-config       "configure.example.json")
+                         @@#'config/configuration)
+       from-json-alt (do (reset! @#'config/configuration {})
+                      (config/load-config {:src "configure.example.json"
+                                           :as :json})
+                      @@#'config/configuration)
+       from-edn      (do (reset! @#'config/configuration {})
+                         (config/load-config       "configure.example.edn")
+                         @@#'config/configuration)
+       from-edn-alt  (do (reset! @#'config/configuration {})
+                         (config/load-config {:src "configure.example.edn"
+                                              :as :edn})
+                         @@#'config/configuration)]
+   from-json     => from-json-alt
+   from-json-alt => from-yml
+   from-yml      => from-yml-alt
+   from-yml-alt  => from-edn
+   from-edn      => from-edn-alt
+   from-edn-alt      => from-json))
 
 (facts
  "with-env observes specified restrictions"

@@ -1,0 +1,18 @@
+{:dev {:fou
+       {:barre "127.0.0.1"
+        :car 54}
+       :size "small"
+       :smiles [{:mary "8-)"
+                 :fred ":-|"}
+                {:mary "*_*"
+                 :fred "-__-"}]
+       :magic false
+       :skidoo 23}
+ :test {:fou
+        {:barre "9.9.9.9", :car 9},
+        :size "medium",
+        :magic false},
+ :prod {:fou
+        {:barre "7.7.7.7", :car 6},
+        :size "large",
+        :magic true}}

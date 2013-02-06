@@ -3,6 +3,7 @@
             [clojure.tools.logging :as log]
             [clojure.walk :as walk]
             [clj-yaml.core :as yaml]
+            [cheshire.core :as json]
             [clojure.string :as str]
             [swiss-arrows.core :refer [-<>]]))
 
@@ -80,32 +81,26 @@
             (resolve-format* src-spec)
             (resolve-format* (:src src-spec)))))))
 
-(defn ^:private keywordize
-  "recursively convert strings that should be keywords into keywords"
-  [config-map]
-  (walk/prewalk
-   (fn [form]
-     (cond (and (string? form) (= \: (first form)))
-           (keyword (apply str (rest form))),
-           (seq? form) (vec form),
-           :else form))
-   config-map))
+(defn ^:private file-src [src-spec process-config]
+  (let [config-file (io/resource (if (string? src-spec)
+                                   src-spec
+                                   (:src src-spec)))]
+    (if-not config-file
+      (throw (Exception. "config file not found."))
+      (process-config config-file))))
 
 (defmulti src resolve-format)
 
 (defmethod src nil [_] {})
 
 (defmethod src :yml [src-spec]
-  (let [config-file (io/resource (if (string? src-spec)
-                                   src-spec
-                                   (:src src-spec)))]
-    (if-not config-file
-      (throw (Exception. "config file not found."))
-      (-> config-file, slurp, yaml/parse-string, keywordize))))
+  (file-src src-spec #(yaml/parse-string (slurp %))))
 
-(defmethod src :json [src-spec] (throw (Exception. "TODO")))
+(defmethod src :json [src-spec]
+  (file-src src-spec #(json/parse-string (slurp %) true)))
 
-(defmethod src :edn [src-spec]  (throw (Exception. "TODO")))
+(defmethod src :edn [src-spec]
+  (file-src src-spec #(binding [*read-eval* false] (read-string (slurp %)))))
 
 (defmethod src :assoc-in [src-spec]
   (reduce-kv assoc-in {} (apply hash-map (:src src-spec))))
