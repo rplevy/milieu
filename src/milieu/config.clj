@@ -1,7 +1,8 @@
 (ns milieu.config
   (:require [clojure.java.io :as io]
-            [clojure.tools.logging :as log]
-            [clojure.walk :as walk]
+            [clojure.tools
+             [logging :as log]
+             [cli :as cli]]
             [clj-yaml.core :as yaml]
             [cheshire.core :as json]
             [clojure.string :as str]
@@ -35,22 +36,16 @@
   (or (keyword (getenv env-sysvar-name))
       :dev))
 
-(defn ^:private cli [args]
-  (let [index-or-key #(if (re-matches #"\d+" %)
-                        (Integer/parseInt %) (keyword %))
-        cmdarg->cfgkey
-        (fn [s] (-<> s
-                     (str/replace <> #"^-+" "")
-                     (str/split <> #"\.")
-                     (map index-or-key <>)
-                     vec))
-        ;; TODO: tools.cli would be useful here
-        read-string' (fn [s]
+(defn ^:private cli [cli-options args]
+  (let [read-string' (fn [s]
                        #_"read-string could be used as it is, but it is tiresome
                           to enter strings like '\"....\"' in command-line args.
                           To address this, accept tokens verbatim and string-ify
                           non-keyword, non-number tokens. Tokens that don't play
-                          well with the reader are also interpreted as strings."
+                          well with the reader are also interpreted as strings.
+
+                          As an alternative to this 'type guessing' :cli-options
+                          can be specified, applying clojure.tools.cli."
                        (if (re-find #"\s" s)
                          s
                          (let [x (binding [*read-eval* false]
@@ -59,9 +54,24 @@
                                    (= (class x) java.lang.Boolean)
                                    (isa? (class x) java.lang.Number))
                              x
-                             (str s)))))]
+                             (str s)))))
+        generate-options (fn [args] (reduce
+                                     (fn [r k]
+                                       (conj r [k :parse-fn read-string']))
+                                     []
+                                     (filter #(= (first %) \-) args)))
+        cmdarg->cfgkey (fn [s] (-<> s
+                                    (str/replace <> #"^-+" "")
+                                    (str/split <> #"\.")
+                                    (map #(if (re-matches #"\d+" %)
+                                            (Integer/parseInt %)
+                                            (keyword %))
+                                         <>)
+                                    vec))
+        [cmdargs _ banner] (cli/cli args (or cli-options
+                                             (generate-options args)))
     (reduce-kv (fn [r cmdarg cmdval]
-                 (conj r (cmdarg->cfgkey cmdarg) (read-string' cmdval)))
+                 (conj r (cmdarg->cfgkey cmdarg) cmdval))
                []
                (apply hash-map args))))
 
@@ -89,7 +99,37 @@
       (throw (Exception. "config file not found."))
       (process-config config-file))))
 
-(defmulti src resolve-format)
+(defmulti src
+  ":tgt (not yet implemented)
+     specify a target config environment for these values, for cases where it
+     is not already specified in the source data itself.
+
+   :scope (not yet implemented)
+     specify a limited scope, such that provided values only apply when the
+     given scope is indicated at the time of accesing the value.
+
+   :as specifies source type.
+     :yml|:json|:edn
+       for file-based configuration
+       :src \"filenamestring\"
+     :cli
+       command-line interface
+       :src [\"--option\" \"value\" ...]
+       :cli-options (see clojure.tools.cli documentation)
+         If not specified, then the values are automatically converted in a way
+         that maintains parity with the conversions applied parsing file formats
+       :cli-help-function [:help-key (fn [usage-doc] ... )]
+         optional hook for printing help/usage using tool.cli-generated usage
+         string.
+     :data
+       directly specify values as data.
+       :src {:dev {:foo 1}}
+     :assoc-in
+       directly specify values in the style used by assoc-in.
+       :src [[:key1 :key1] value, ...]
+     :environ (system environment vars and lein config)
+       (not yet implemented - will integrate weavejester/environ functionality)"
+  resolve-format)
 
 (defmethod src nil [_] {})
 
@@ -106,7 +146,7 @@
   (reduce-kv assoc-in {} (apply hash-map (:src src-spec))))
 
 (defmethod src :cli [src-spec]
-  (src (assoc (update-in src-spec [:src] cli)
+  (src (assoc (update-in src-spec [:src] (partial cli (:cli-options src-spec)))
          :as :assoc-in)))
 
 (defmethod src :data [src-spec]
@@ -118,6 +158,9 @@
    Env can optionally be a vector containing the env and options. Presently
    the option :only is supported, which stops execution if the provided
    env is not in the limited set.
+
+   The option :overrides provides the ability to override values for the
+   specified environment
 
    Usage:
 
