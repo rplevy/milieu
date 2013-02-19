@@ -8,8 +8,7 @@ The environmentally friendly configuration tool.
 
 ## Features:
 
-* Set up environment-specific configuration for your Clojure application, using
-the popular YAML file format.
+* Set up environment-specific configuration for your Clojure application. Supported file formats include YAML, JSON, and EDN. Supported non-file methods of configuration include native Clojure data, [(IN PROGRESS) system-environment-variables, and command-line options].
 
 * Access config values:
 
@@ -55,7 +54,14 @@ the popular YAML file format.
 
 * Optionally auto-load config file.
   * using the default filename of "configure.yml" enables autoload
-  * any other config file name can be specified by calling load-config
+  * other types of file and non-file data sources can be specified using load-config. Examples:
+  ```clojure
+  (config/load-config "my-config.yml")
+
+  (config/load-config {:src "my-config" :as :yml})
+
+  (config/load-config {:src "my-config" :as :edn})
+  ```
 
 * Bind the environment within a calling context using with-env.
   ```clojure
@@ -66,10 +72,22 @@ the popular YAML file format.
 * Specify the default environment using the MILIEU_ENV system variable.
 
 * Override environment-specific settings using arguments to your command-line
-application.
+application, or other kinds of sources.
   ```clojure
-    (config/commandline-overrides! args)
-    (config/with-env env
+    (config/with-env :dev
+      :overrides {:src args
+                  :as :cli} ; args from -main function
+      ... )
+
+    (config/with-env :dev
+      :overrides {:src {:hello {:world 1}}
+                  :as :data}
+      ... )
+
+    (config/with-env :dev
+      :overrides {:src [[:hello] 2,
+                        [:fou :my-barre] "1.2.3.4"]
+                  :as :assoc-in}
       ... )
   ```
 
