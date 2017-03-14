@@ -4,7 +4,7 @@
             [clojure.walk :as walk]
             [clj-yaml.core :as yaml]
             [clojure.string :as str]
-            [swiss-arrows.core :refer [-<>]]))
+            [swiss.arrows :refer [-<>]]))
 
 (defonce ^:private configuration (atom {}))
 
