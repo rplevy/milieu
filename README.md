@@ -4,7 +4,7 @@ The environmentally friendly configuration tool.
 
 ------
 
-**Build status:** [![Build Status](https://secure.travis-ci.org/drakerlabs/milieu.png?branch=master)](http://travis-ci.org/drakerlabs/milieu)
+[![Clojars Project](https://img.shields.io/clojars/v/rplevy/milieu.svg)](https://clojars.org/rplevy/milieu)
 
 ## Features:
 
@@ -107,7 +107,7 @@ if-env and when-env.
 
 ### Installation
 
-http://clojars.org/milieu
+http://clojars.org/rplevy/milieu
 
 ### Getting Started
 
@@ -134,9 +134,9 @@ $ myprogram dev --smiles.1.mary ":D"
 
 ## License
 
-Author: Robert Levy / @rplevy-draker
+Author: Robert Levy / @rplevy
 
-Acknowledgments: @alanpeabody, @S11001001, @AlexBaranosky
+Acknowledgments: @alanpeabody, @S11001001, @AlexBaranosky, @khdegraaf
 
 Copyright © 2012 Draker Labs
 
